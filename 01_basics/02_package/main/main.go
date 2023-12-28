@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/Minnull/practice-golang/basics/02_package/export_val"
-	"github.com/Minnull/practice-golang/basics/02_package/stringutil"
+	"github.com/Minnull/practice-golang/01_basics/02_package/export_val"
+	"github.com/Minnull/practice-golang/01_basics/02_package/stringutil"
 )
 
 func main() {

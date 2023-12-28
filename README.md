@@ -18,9 +18,8 @@ The primary objective of this repository is to provide a structured environment 
 
 The repository is organized into different directories, each focusing on specific topics or exercises. For instance:
 
-- `/basics`: Covers fundamental syntax and concepts.
-- `/packages`: Explores package creation and usage.
-- `/concurrency`: Dives into concurrency patterns and best practices.
+- **/01_basics:** Covers fundamental syntax and concepts.
+- **/02_advanced:** Explores more advanced topics and exercises.
 
 Feel free to navigate through the directories based on your learning needs or interests.
 
