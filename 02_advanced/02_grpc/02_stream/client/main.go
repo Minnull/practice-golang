@@ -10,6 +10,8 @@ import (
 	_ "google.golang.org/grpc/balancer/grpclb"
 )
 
+// 参考代码：https://www.jianshu.com/p/bd35cbf279fb
+
 const (
 	ADDRESS = "localhost:50051"
 )
