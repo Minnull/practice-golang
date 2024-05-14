@@ -42,4 +42,7 @@ func main() {
 	fmt.Println("连续扩容后容量")
 	fmt.Println(len(greeting))
 	fmt.Println(cap(greeting))
+
+	var customerNumberMap = make(map[string]int)
+	fmt.Println("map打印，不存在的key的value", customerNumberMap["test"])
 }
