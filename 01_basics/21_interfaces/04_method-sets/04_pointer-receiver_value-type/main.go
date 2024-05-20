@@ -23,5 +23,6 @@ func info(s shape) {
 
 func main() {
 	c := circle{5}
+	// 方法绑定的是指针类型，必须传内存地址
 	info(c)
 }
