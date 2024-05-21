@@ -9,7 +9,7 @@ import (
 func interface1(ctx context.Context) error {
 	// 模拟接口1的调用
 	select {
-	case <-time.After(2 * time.Second):
+	case <-time.After(3 * time.Second):
 		fmt.Println("Interface 1 call completed successfully")
 	case <-ctx.Done():
 		return ctx.Err()
@@ -20,7 +20,7 @@ func interface1(ctx context.Context) error {
 func interface2(ctx context.Context) error {
 	// 模拟接口2的调用
 	select {
-	case <-time.After(2 * time.Second):
+	case <-time.After(3 * time.Second):
 		fmt.Println("Interface 2 call completed successfully")
 	case <-ctx.Done():
 		return ctx.Err()
@@ -29,11 +29,13 @@ func interface2(ctx context.Context) error {
 }
 
 func main() {
-	rpcTimeout := 4 * time.Second
+	rpcTimeout := 5 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), rpcTimeout)
 	defer cancel()
 
 	// 使用同一个context，第一个rpc未超时，则后续的rpc可以复用ctx
+	// 但是两次查询，使用同一个context超时时间累计。
+	// interface1耗时 + interface2耗时 > rpcTimeout则超时
 	start1 := time.Now()
 	err := interface1(ctx)
 	if err != nil {
