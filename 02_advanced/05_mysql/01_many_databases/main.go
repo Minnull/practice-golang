@@ -27,7 +27,7 @@ func main() {
 
 		fmt.Printf(strconv.Itoa(index+1)+".查询的库：%s\n", dbConfig)
 		// 执行查询语句
-		fmt.Printf("（1）在worker 不在subtasks的 \n")
+		fmt.Printf("（1）在subtasks 不在worker的 \n")
 		rows, err := db.Query("SELECT DISTINCT worker_id\nFROM subtasks_tab\nWHERE deleted_at = 0\nAND worker_id not IN (\n    SELECT DISTINCT worker_id\n    FROM workers_tab\n    WHERE deleted_at = 0\n);")
 		if err != nil {
 			fmt.Printf("查询失败：%s\n", err.Error())
@@ -45,7 +45,7 @@ func main() {
 			fmt.Println(a)
 		}
 
-		fmt.Printf("（2）在subtasks 不在worker的 \n")
+		fmt.Printf("（2）在worker 不在subtasks的 \n")
 		rows2, err2 := db.Query("SELECT DISTINCT worker_id\nFROM workers_tab\nWHERE deleted_at = 0\nAND worker_id not IN (\n    SELECT DISTINCT worker_id\n    FROM subtasks_tab\n    WHERE deleted_at = 0\n);\n")
 		if err2 != nil {
 			fmt.Printf("查询失败：%s\n", err.Error())
