@@ -1,7 +1,8 @@
-package validator
+package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -21,17 +22,20 @@ type Config struct {
 	ExecutionMode  string // 控制执行模式
 }
 
+type Command struct {
+	WriteCommand  string
+	VerifyCommand string
+}
+
 // RunValidation 运行验证流程
-func RunValidation(config Config) error {
+func RunValidation(config Config, commands []Command) error {
 	sourceClient := createRedisClient(config.SourceHost, config.SourcePort, config.SourcePassword)
 	targetClient := createRedisClient(config.TargetHost, config.TargetPort, config.TargetPassword)
 
 	ctx := context.Background()
 
-	commands := initCommands()
-
 	for i, cmd := range commands {
-		log.Printf("Executing command %d...", i+1)
+		log.Printf("Executing command %d, cmd:[%s]...", i+1, cmd.WriteCommand)
 
 		// 执行写入命令到源集群
 		if _, err := ExecuteCommand(ctx, sourceClient, cmd.WriteCommand); err != nil {
@@ -39,12 +43,14 @@ func RunValidation(config Config) error {
 		}
 
 		// 验证源集群中的数据
+		log.Printf("source redis check cmd: [%s]", cmd.VerifyCommand)
 		sourceResult, err := ExecuteCommand(ctx, sourceClient, cmd.VerifyCommand)
 		if err != nil {
 			return fmt.Errorf("source data verification failed: %v", err)
 		}
 
 		// 验证目标集群中的数据
+		log.Printf("target redis check cmd: [%s]", cmd.VerifyCommand)
 		targetResult, err := ExecuteCommand(ctx, targetClient, cmd.VerifyCommand)
 		if err != nil {
 			return fmt.Errorf("target data verification failed: %v", err)
@@ -52,9 +58,10 @@ func RunValidation(config Config) error {
 
 		// 对比源集群和目标集群的数据
 		if sourceResult != targetResult {
-			return fmt.Errorf("data mismatch for command %s: source='%s', target='%s'", cmd.VerifyCommand, sourceResult, targetResult)
+			return fmt.Errorf("data mismatch for command %s: sourceResult='%s', targetResult='%s'", cmd.VerifyCommand, sourceResult, targetResult)
+		} else {
+			log.Printf("Command %d verified successfully.command %s: sourceResult='%s', targetResult='%s'", i+1, cmd.VerifyCommand, sourceResult, targetResult)
 		}
-		log.Println("Data verified successfully.")
 
 		// 根据执行模式判断是否停顿
 		if config.ExecutionMode == "step" {
@@ -77,9 +84,9 @@ func convertToInterfaceSlice(args []string) []interface{} {
 
 func ExecuteCommand(ctx context.Context, client *redis.Client, commands string) (string, error) {
 	cmdList := strings.Split(commands, ";")
-	var lastResult string
+	var cmdResult bytes.Buffer
 
-	for _, command := range cmdList {
+	for i, command := range cmdList {
 		command = strings.TrimSpace(command)
 		if command == "" {
 			continue
@@ -94,15 +101,20 @@ func ExecuteCommand(ctx context.Context, client *redis.Client, commands string) 
 		args := parts[1:]
 
 		redisCmd := client.Do(ctx, append([]interface{}{cmd}, convertToInterfaceSlice(args)...)...)
-		lastResult, err := redisCmd.Result()
+		cmdResultTemp, err := redisCmd.Result()
 		if err != nil && err != redis.Nil {
 			return "", fmt.Errorf("command failed: %s, error: %v", command, err)
 		}
 
-		fmt.Printf("Command: %s\nResult: %v\n", command, lastResult)
+		fmt.Printf("Command: %s\nResult: %v\n", command, cmdResultTemp)
+
+		if i > 0 {
+			cmdResult.WriteString("; ")
+		}
+		cmdResult.WriteString(fmt.Sprintf("%v", cmdResultTemp))
 	}
 
-	return lastResult, nil
+	return cmdResult.String(), nil
 }
 
 func createRedisClient(host, port, password string) *redis.Client {
