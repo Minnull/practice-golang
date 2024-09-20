@@ -1,41 +1,53 @@
 package main
 
 import (
-	"context"
 	"log"
+	"time"
 
 	"golang.org/x/time/rate"
 )
 
-func main() {
-	ratePerSecond := 1 * 1024 * 1024 // 1MB 每秒
-	burst := 2 * 1024 * 1024         // 允许 2MB 的突发流量
+func testRateLimiter(ratePerSecond, burst, dataSize int) {
 	limiter := rate.NewLimiter(rate.Limit(ratePerSecond), burst)
 
-	for i := 1; i <= 5; i++ {
-		dataSize := i * 3 * 1024 * 1024 // 模拟传输 i*3 MB 的数据，超出 burst
+	log.Printf("开始处理 %d MB 的数据\n", dataSize/1024/1024)
 
-		log.Printf("开始处理 %d MB 的数据\n", dataSize/1024/1024)
+	for dataSize > 0 {
+		// 每次传输的最大值不能超过 burst
+		toSend := burst
+		if dataSize < burst {
+			toSend = dataSize
+		}
 
-		for dataSize > 0 {
-			// 每次传输的最大值不能超过 burst
-			toSend := burst
-			if dataSize < burst {
-				toSend = dataSize
-			}
-
-			// 使用限流器等待处理该批次数据
-			err := limiter.WaitN(context.Background(), toSend)
-			if err != nil {
-				log.Fatalf("限流器出错: %v", err)
-			}
-
+		// 使用限流器检查是否允许处理该批次数据
+		if limiter.AllowN(time.Now(), toSend) {
 			log.Printf("处理了 %d MB 的数据\n", toSend/1024/1024)
-
-			// 更新剩余数据量
 			dataSize -= toSend
+		} else {
+			// 如果不允许，则等待并重试
+			time.Sleep(time.Second)
 		}
 	}
 
 	log.Println("所有数据处理完毕")
+}
+
+func main() {
+	// 测试不同的限流情况
+	log.Println("Testing with rate < sendSize")
+	testRateLimiter(1*1024*1024, 2*1024*1024, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+
+	log.Println("Testing with rate = sendSize")
+	testRateLimiter(3*1024*1024, 3*1024*1024, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+
+	log.Println("Testing with rate > sendSize")
+	testRateLimiter(4*1024*1024, 3*1024*1024, 3*1024*1024)
+
+	log.Println("Testing with rate = 0 (should block indefinitely)")
+	testRateLimiter(0, 2*1024*1024, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+
+	log.Println("所有测试完毕")
 }

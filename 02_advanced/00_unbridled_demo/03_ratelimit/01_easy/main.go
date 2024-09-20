@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"math"
 	"time"
 )
 
@@ -33,18 +32,41 @@ func (rl *RateLimiter) Allow(size int64) {
 	}
 }
 
-// 超过限流最大值，会一直卡死
-func main() {
-	limiter := NewRateLimiter(1 * 1024 * 1024) // 1MB/s
+// 测试限流器
+func testRateLimiter(rate, dataSize int64) {
+	limiter := NewRateLimiter(rate)
 
-	// 模拟数据传输
-	go func() {
-		for i := 0; i < math.MaxInt64; i++ {
-			limiter.Allow(300 * 1024) // 1MB
-			log.Printf("Sent data,num= %d", i)
+	log.Printf("开始处理 %d MB 的数据，限流为 %d MB/s\n", dataSize/1024/1024, rate/1024/1024)
+
+	for dataSize > 0 {
+		toSend := rate
+		if dataSize < rate {
+			toSend = dataSize
 		}
-	}()
 
-	// 防止主协程退出
-	select {}
+		limiter.Allow(toSend)
+		log.Printf("处理了 %d MB 的数据\n", toSend/1024/1024)
+		dataSize -= toSend
+	}
+
+	log.Println("所有数据处理完毕")
+}
+
+func main() {
+	// 测试不同的限流情况
+	log.Println("Testing with rate < sendSize")
+	testRateLimiter(1*1024*1024, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+
+	log.Println("Testing with rate = sendSize")
+	testRateLimiter(3*1024*1024, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+
+	log.Println("Testing with rate > sendSize")
+	testRateLimiter(4*1024*1024, 3*1024*1024)
+
+	log.Println("Testing with rate = 0 (should block indefinitely)")
+	testRateLimiter(0, 3*1024*1024)
+	time.Sleep(2 * time.Second)
+	log.Println("所有测试完毕")
 }
