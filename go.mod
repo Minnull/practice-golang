@@ -10,6 +10,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.9.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/net v0.19.0
+	golang.org/x/time v0.6.0
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
 )

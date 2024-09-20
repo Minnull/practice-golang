@@ -33,6 +33,7 @@ func (rl *RateLimiter) Allow(size int64) {
 	}
 }
 
+// 超过限流最大值，会一直卡死
 func main() {
 	limiter := NewRateLimiter(1 * 1024 * 1024) // 1MB/s
 

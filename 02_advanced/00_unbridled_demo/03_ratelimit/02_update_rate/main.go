@@ -70,6 +70,7 @@ func (rl *RateLimiter) UpdateRate(newRate int64) {
 	go rl.refill()
 }
 
+// 超过限流最大值，会一直卡死
 func main() {
 	limiter := NewRateLimiter(1 * 1024 * 1024) // 1MB/s
 
