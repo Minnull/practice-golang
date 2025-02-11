@@ -2,7 +2,9 @@
 
 # 设置绝对路径变量（请根据实际路径修改）
 JAVA_HOME="/Users/weijie.ma/Library/Java/JavaVirtualMachines/temurin-1.8.0_345/Contents/Home"
-LIBRARY_PATH="/Users/weijie.ma/Desktop/all/code/goland/mmdb-go/hello"
+LIBRARY_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "LIBRARY_PATH is set to: $LIBRARY_PATH"
 
 # 创建 Go 代码文件
 cat <<EOF > hello.go
