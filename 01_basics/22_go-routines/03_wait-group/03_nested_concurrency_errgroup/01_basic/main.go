@@ -8,6 +8,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// case 1: 模拟手动触发cancel，任务主动退出
+// case 2: 模拟不触发cancel，任务正常执行完成
 func main() {
 	// 示例任务列表
 	tasks := []int{1, 2, 3, 4, 5, 6, 7}
@@ -24,7 +26,10 @@ func main() {
 
 	// 模拟某个条件触发取消操作 (例如，5秒后手动触发)
 	go func() {
-		time.Sleep(3 * time.Second)
+		// case 1: 模拟手动触发cancel，任务主动退出
+		//time.Sleep(3 * time.Second)
+		// case 2: 模拟不触发cancel，任务正常执行完成
+		time.Sleep(30 * time.Second)
 		fmt.Println("主动触发取消...")
 		cancel() // 主动触发退出
 	}()
